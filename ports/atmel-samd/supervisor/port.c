@@ -50,6 +50,7 @@
 #include "common-hal/busio/SPI.h"
 #include "common-hal/microcontroller/Pin.h"
 #include "common-hal/pulseio/PulseIn.h"
+#include "common-hal/pulseio/Ps2.h"
 #include "common-hal/pulseio/PulseOut.h"
 #include "common-hal/pulseio/PWMOut.h"
 #include "common-hal/rtc/RTC.h"

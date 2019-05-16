@@ -32,6 +32,7 @@
 #include "shared-bindings/microcontroller/Pin.h"
 #include "shared-bindings/pulseio/__init__.h"
 #include "shared-bindings/pulseio/PulseIn.h"
+#include "shared-bindings/pulseio/Ps2.h"
 #include "shared-bindings/pulseio/PulseOut.h"
 #include "shared-bindings/pulseio/PWMOut.h"
 
@@ -50,6 +51,7 @@
 //|     :maxdepth: 3
 //|
 //|     PulseIn
+//|     Ps2
 //|     PulseOut
 //|     PWMOut
 //|
@@ -83,6 +85,7 @@
 STATIC const mp_rom_map_elem_t pulseio_module_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_pulseio) },
     { MP_ROM_QSTR(MP_QSTR_PulseIn), MP_ROM_PTR(&pulseio_pulsein_type) },
+    { MP_ROM_QSTR(MP_QSTR_Ps2), MP_ROM_PTR(&pulseio_ps2_type) },
     { MP_ROM_QSTR(MP_QSTR_PulseOut), MP_ROM_PTR(&pulseio_pulseout_type) },
     { MP_ROM_QSTR(MP_QSTR_PWMOut), MP_ROM_PTR(&pulseio_pwmout_type) },
 };

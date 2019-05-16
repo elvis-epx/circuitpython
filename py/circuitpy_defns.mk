@@ -250,6 +250,7 @@ $(filter $(SRC_PATTERNS), \
 	os/__init__.c \
 	pulseio/PWMOut.c \
 	pulseio/PulseIn.c \
+	pulseio/Ps2.c \
 	pulseio/PulseOut.c \
 	pulseio/__init__.c \
 	rotaryio/IncrementalEncoder.c \

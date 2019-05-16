@@ -151,6 +151,7 @@ capabilities = {
     },
     "pulseio": {
         "PulseIn": ALL_BUT_USB,
+        "Ps2": ALL_BUT_USB,
         "PWMOut": ["PA01", "PB09", "PA04", "PA05", "PA06", "PA07", "PA08",
                    "PA09", "PA10", "PA11", "PB10", "PB11", "PA12", "PA13",
                    "PA14", "PA15", "PA16", "PA17", "PA18", "PA19", "PA20",
