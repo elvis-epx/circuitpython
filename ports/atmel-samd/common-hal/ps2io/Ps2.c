@@ -325,7 +325,7 @@ int16_t common_hal_ps2io_ps2_popleft(ps2io_ps2_obj_t* self)
     return b;
 }
 
-uint16_t common_hal_ps2io_ps2_get_error(ps2io_ps2_obj_t* self)
+uint16_t common_hal_ps2io_ps2_errors(ps2io_ps2_obj_t* self)
 {
     common_hal_mcu_disable_interrupts();
     uint16_t error = self->last_error;
@@ -337,7 +337,7 @@ uint16_t common_hal_ps2io_ps2_get_error(ps2io_ps2_obj_t* self)
 // Based upon TMK implementation of PS/2 protocol
 // https://github.com/tmk/tmk_keyboard/blob/master/tmk_core/protocol/ps2_interrupt.c
 
-int16_t common_hal_ps2io_ps2_send_byte(ps2io_ps2_obj_t* self, uint8_t b)
+int16_t common_hal_ps2io_ps2_sendcmd(ps2io_ps2_obj_t* self, uint8_t b)
 {
     int16_t ret = 0;
     disable_interrupt(self);

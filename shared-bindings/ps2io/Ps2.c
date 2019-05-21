@@ -63,8 +63,8 @@
 //|     while len(kbd) == 0:
 //|         pass
 //|     print(kbd.popleft())
-//|     print(kbd.send_byte(0xed))
-//|     print(kbd.send_byte(0x02))
+//|     print(kbd.sendcmd(0xed))
+//|     print(kbd.sendcmd(0x02))
 //|
 STATIC mp_obj_t ps2io_ps2_make_new(const mp_obj_type_t *type, size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     enum { ARG_datapin, ARG_clkpin };
@@ -135,32 +135,47 @@ STATIC mp_obj_t ps2io_ps2_obj_popleft(mp_obj_t self_in) {
 }
 MP_DEFINE_CONST_FUN_OBJ_1(ps2io_ps2_popleft_obj, ps2io_ps2_obj_popleft);
 
-//|   .. method:: send_byte()
+//|   .. method:: sendcmd()
 //|
-//|     Sends a byte to PS/2. Returns the response byte (positive)
-//|     or a communication error code (negative). The response is
-//|     typically an ACK (0xFA). Some commands return additional data
-//|     bytes that should be received via popleft().
-//|
-STATIC mp_obj_t ps2io_ps2_obj_send_byte(mp_obj_t self_in, mp_obj_t ob) {
+//|     Sends a command byte to PS/2. Returns the response byte.
+//|     The response is typically an ACK (0xFA).
+//|     Some commands return additional data  bytes that should be
+//|     received via popleft().
+//|     Raises an OSError in case of error. Possible error values:
+//|        0x01: clock pin didn't go to LO in time
+//|        0x02: clock pin didn't go to HI in time
+//|        0x04: data pin didn't ack
+//|        0x08: clock pin didn't ack
+//|        0x10: device didn't respond to Request to Send
+//|        0x20: device didn't send response byte in time
+STATIC mp_obj_t ps2io_ps2_obj_sendcmd(mp_obj_t self_in, mp_obj_t ob) {
     ps2io_ps2_obj_t *self = MP_OBJ_TO_PTR(self_in);
     raise_error_if_deinited(common_hal_ps2io_ps2_deinited(self));
-    mp_int_t b = mp_obj_get_int(ob) & 0xff;
-    return MP_OBJ_NEW_SMALL_INT(common_hal_ps2io_ps2_send_byte(self, b));
+    mp_int_t cmd = mp_obj_get_int(ob) & 0xff;
+    int resp = common_hal_ps2io_ps2_sendcmd(self, cmd);
+    if (resp < 0) {
+        mp_raise_OSError(-resp);
+    }
+    return MP_OBJ_NEW_SMALL_INT(resp);
 }
-MP_DEFINE_CONST_FUN_OBJ_2(ps2io_ps2_send_byte_obj, ps2io_ps2_obj_send_byte);
+MP_DEFINE_CONST_FUN_OBJ_2(ps2io_ps2_sendcmd_obj, ps2io_ps2_obj_sendcmd);
 
-//|   .. method:: get_error()
+//|   .. method:: errors()
 //|
-//|     Returns and clears the bitmap of last communication errors.
+//|     Returns and clears a bitmap of last communication errors.
+//|     0x01: start bit not 0
+//|     0x02: timeout
+//|     0x04: parity bit error
+//|     0x08: stop bit not 1
+//|     0x10: buffer overflow, newest data discarded
 //|
-STATIC mp_obj_t ps2io_ps2_obj_get_error(mp_obj_t self_in) {
+STATIC mp_obj_t ps2io_ps2_obj_errors(mp_obj_t self_in) {
     ps2io_ps2_obj_t *self = MP_OBJ_TO_PTR(self_in);
     raise_error_if_deinited(common_hal_ps2io_ps2_deinited(self));
 
-    return MP_OBJ_NEW_SMALL_INT(common_hal_ps2io_ps2_get_error(self));
+    return MP_OBJ_NEW_SMALL_INT(common_hal_ps2io_ps2_errors(self));
 }
-MP_DEFINE_CONST_FUN_OBJ_1(ps2io_ps2_get_error_obj, ps2io_ps2_obj_get_error);
+MP_DEFINE_CONST_FUN_OBJ_1(ps2io_ps2_errors_obj, ps2io_ps2_obj_errors);
 
 //|   .. method:: __len__()
 //|
@@ -184,8 +199,8 @@ STATIC const mp_rom_map_elem_t ps2io_ps2_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR___enter__), MP_ROM_PTR(&default___enter___obj) },
     { MP_ROM_QSTR(MP_QSTR___exit__), MP_ROM_PTR(&ps2io_ps2___exit___obj) },
     { MP_ROM_QSTR(MP_QSTR_popleft), MP_ROM_PTR(&ps2io_ps2_popleft_obj) },
-    { MP_ROM_QSTR(MP_QSTR_send_byte), MP_ROM_PTR(&ps2io_ps2_send_byte_obj) },
-    { MP_ROM_QSTR(MP_QSTR_get_error), MP_ROM_PTR(&ps2io_ps2_get_error_obj) },
+    { MP_ROM_QSTR(MP_QSTR_sendcmd), MP_ROM_PTR(&ps2io_ps2_sendcmd_obj) },
+    { MP_ROM_QSTR(MP_QSTR_errors), MP_ROM_PTR(&ps2io_ps2_errors_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(ps2io_ps2_locals_dict, ps2io_ps2_locals_dict_table);
 
