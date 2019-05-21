@@ -38,7 +38,7 @@ extern void common_hal_ps2io_ps2_construct(ps2io_ps2_obj_t* self,
 extern void common_hal_ps2io_ps2_deinit(ps2io_ps2_obj_t* self);
 extern bool common_hal_ps2io_ps2_deinited(ps2io_ps2_obj_t* self);
 extern uint16_t common_hal_ps2io_ps2_get_len(ps2io_ps2_obj_t* self);
-extern int16_t common_hal_ps2io_ps2_get_byte(ps2io_ps2_obj_t* self);
+extern int16_t common_hal_ps2io_ps2_popleft(ps2io_ps2_obj_t* self);
 extern int16_t common_hal_ps2io_ps2_send_byte(ps2io_ps2_obj_t* self, uint8_t b);
 extern uint16_t common_hal_ps2io_ps2_get_error(ps2io_ps2_obj_t* self);
 

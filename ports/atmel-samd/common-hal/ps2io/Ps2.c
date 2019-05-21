@@ -311,7 +311,7 @@ bool common_hal_ps2io_ps2_get_paused(ps2io_ps2_obj_t* self) {
     return (EIC->INTENSET.reg & (mask << EIC_INTENSET_EXTINT_Pos)) == 0;
 }
 
-int16_t common_hal_ps2io_ps2_get_byte(ps2io_ps2_obj_t* self)
+int16_t common_hal_ps2io_ps2_popleft(ps2io_ps2_obj_t* self)
 {
     common_hal_mcu_disable_interrupts();
     if (self->bufcount <= 0) {

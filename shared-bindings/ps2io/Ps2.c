@@ -62,7 +62,7 @@
 //|
 //|     while len(kbd) == 0:
 //|         pass
-//|     print(kbd.get_byte())
+//|     print(kbd.popleft())
 //|     print(kbd.send_byte(0xed))
 //|     print(kbd.send_byte(0x02))
 //|
@@ -118,25 +118,29 @@ STATIC mp_obj_t ps2io_ps2_obj___exit__(size_t n_args, const mp_obj_t *args) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(ps2io_ps2___exit___obj, 4, 4, ps2io_ps2_obj___exit__);
 
-//|   .. method:: get_byte()
+//|   .. method:: popleft()
 //|
 //|     Removes and returns the oldest received byte. When buffer
-//|     is empty, returns a negative number.
+//|     is empty, raises an IndexError exception.
 //|
-STATIC mp_obj_t ps2io_ps2_obj_get_byte(mp_obj_t self_in) {
+STATIC mp_obj_t ps2io_ps2_obj_popleft(mp_obj_t self_in) {
     ps2io_ps2_obj_t *self = MP_OBJ_TO_PTR(self_in);
     raise_error_if_deinited(common_hal_ps2io_ps2_deinited(self));
 
-    return MP_OBJ_NEW_SMALL_INT(common_hal_ps2io_ps2_get_byte(self));
+    int b = common_hal_ps2io_ps2_popleft(self);
+    if (b < 0) {
+        mp_raise_IndexError(translate("pop from an empty Ps2 buffer"));
+    }
+    return MP_OBJ_NEW_SMALL_INT(b);
 }
-MP_DEFINE_CONST_FUN_OBJ_1(ps2io_ps2_get_byte_obj, ps2io_ps2_obj_get_byte);
+MP_DEFINE_CONST_FUN_OBJ_1(ps2io_ps2_popleft_obj, ps2io_ps2_obj_popleft);
 
 //|   .. method:: send_byte()
 //|
 //|     Sends a byte to PS/2. Returns the response byte (positive)
 //|     or a communication error code (negative). The response is
 //|     typically an ACK (0xFA). Some commands return additional data
-//|     bytes that should be received via get_byte().
+//|     bytes that should be received via popleft().
 //|
 STATIC mp_obj_t ps2io_ps2_obj_send_byte(mp_obj_t self_in, mp_obj_t ob) {
     ps2io_ps2_obj_t *self = MP_OBJ_TO_PTR(self_in);
@@ -161,7 +165,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(ps2io_ps2_get_error_obj, ps2io_ps2_obj_get_error);
 //|   .. method:: __len__()
 //|
 //|     Returns the number of received bytes in buffer, obtainable
-//|     via get_byte()
+//|     via popleft()
 //|
 STATIC mp_obj_t ps2_unary_op(mp_unary_op_t op, mp_obj_t self_in) {
     ps2io_ps2_obj_t *self = MP_OBJ_TO_PTR(self_in);
@@ -179,7 +183,7 @@ STATIC const mp_rom_map_elem_t ps2io_ps2_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_deinit), MP_ROM_PTR(&ps2io_ps2_deinit_obj) },
     { MP_ROM_QSTR(MP_QSTR___enter__), MP_ROM_PTR(&default___enter___obj) },
     { MP_ROM_QSTR(MP_QSTR___exit__), MP_ROM_PTR(&ps2io_ps2___exit___obj) },
-    { MP_ROM_QSTR(MP_QSTR_get_byte), MP_ROM_PTR(&ps2io_ps2_get_byte_obj) },
+    { MP_ROM_QSTR(MP_QSTR_popleft), MP_ROM_PTR(&ps2io_ps2_popleft_obj) },
     { MP_ROM_QSTR(MP_QSTR_send_byte), MP_ROM_PTR(&ps2io_ps2_send_byte_obj) },
     { MP_ROM_QSTR(MP_QSTR_get_error), MP_ROM_PTR(&ps2io_ps2_get_error_obj) },
 };
