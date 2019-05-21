@@ -40,6 +40,6 @@ extern bool common_hal_ps2io_ps2_deinited(ps2io_ps2_obj_t* self);
 extern uint16_t common_hal_ps2io_ps2_get_len(ps2io_ps2_obj_t* self);
 extern int16_t common_hal_ps2io_ps2_popleft(ps2io_ps2_obj_t* self);
 extern int16_t common_hal_ps2io_ps2_sendcmd(ps2io_ps2_obj_t* self, uint8_t b);
-extern uint16_t common_hal_ps2io_ps2_errors(ps2io_ps2_obj_t* self);
+extern uint16_t common_hal_ps2io_ps2_clear_errors(ps2io_ps2_obj_t* self);
 
 #endif // MICROPY_INCLUDED_SHARED_BINDINGS_PS2IO_PS2_H

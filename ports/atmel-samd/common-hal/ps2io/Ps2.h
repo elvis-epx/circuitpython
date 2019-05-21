@@ -51,7 +51,7 @@ typedef struct {
     uint8_t bufposr;
     uint8_t bufposw;
 
-    uint16_t last_error;
+    uint16_t last_errors;
 
     bool waiting_cmd_response;
     uint8_t cmd_response;

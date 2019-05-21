@@ -51,18 +51,18 @@
 #define STATE_RECV_STOP 3
 #define STATE_RECV_ERR 10
 
-#define ERROR_STARTBIT 1
-#define ERROR_TIMEOUT 2
-#define ERROR_PARITY 4
-#define ERROR_STOPBIT 8
-#define ERROR_BUFFER 16
+#define ERROR_STARTBIT 0x01
+#define ERROR_TIMEOUT 0x02
+#define ERROR_PARITY 0x04
+#define ERROR_STOPBIT 0x08
+#define ERROR_BUFFER 0x10
 
-#define ERROR_TX_CLKLO -1
-#define ERROR_TX_CLKHI -2
-#define ERROR_TX_ACKDATA -4
-#define ERROR_TX_ACKCLK -8
-#define ERROR_TX_RTS -16
-#define ERROR_TX_NORESP -32
+#define ERROR_TX_CLKLO 0x100
+#define ERROR_TX_CLKHI 0x200
+#define ERROR_TX_ACKDATA 0x400
+#define ERROR_TX_ACKCLK 0x800
+#define ERROR_TX_RTS 0x1000
+#define ERROR_TX_NORESP 0x2000
 
 static void ps2_set_config(ps2io_ps2_obj_t* self) {
     uint32_t sense_setting = EIC_CONFIG_SENSE0_FALL_Val;
@@ -179,7 +179,7 @@ void ps2_interrupt_handler(uint8_t channel) {
     if (self->state != STATE_IDLE) {
         int64_t diff_ms = current_ms - self->last_int_ms;
         if (diff_ms >= 2) { // a.k.a. > 1.001ms
-            self->last_error |= ERROR_TIMEOUT;
+            self->last_errors |= ERROR_TIMEOUT;
             self->state = STATE_IDLE;
         }
     }
@@ -194,7 +194,7 @@ void ps2_interrupt_handler(uint8_t channel) {
         self->state = STATE_RECV;
         if (data_bit) {
             // start bit should be 0
-            self->last_error |= ERROR_STARTBIT;
+            self->last_errors |= ERROR_STARTBIT;
             self->state = STATE_RECV_ERR;
                 } else {
             self->state = STATE_RECV;
@@ -216,7 +216,7 @@ void ps2_interrupt_handler(uint8_t channel) {
             self->parity = !self->parity;
         }
         if (!self->parity) {
-            self->last_error |= ERROR_PARITY;
+            self->last_errors |= ERROR_PARITY;
             self->state = STATE_RECV_ERR;
         } else {
             self->state = STATE_RECV_STOP;
@@ -225,12 +225,12 @@ void ps2_interrupt_handler(uint8_t channel) {
     } else if (self->state == STATE_RECV_STOP) {
         ++self->bitcount;
         if (! data_bit) {
-            self->last_error |= ERROR_STOPBIT;
+            self->last_errors |= ERROR_STOPBIT;
         } else if (self->waiting_cmd_response) {
             self->cmd_response = self->bits;
             self->waiting_cmd_response = false;
         } else if (self->bufcount >= sizeof(self->buffer)) {
-            self->last_error |= ERROR_BUFFER;
+            self->last_errors |= ERROR_BUFFER;
         } else {
             self->buffer[self->bufposw] = self->bits;
             self->bufposw = (self->bufposw + 1) % sizeof(self->buffer);
@@ -325,13 +325,13 @@ int16_t common_hal_ps2io_ps2_popleft(ps2io_ps2_obj_t* self)
     return b;
 }
 
-uint16_t common_hal_ps2io_ps2_errors(ps2io_ps2_obj_t* self)
+uint16_t common_hal_ps2io_ps2_clear_errors(ps2io_ps2_obj_t* self)
 {
     common_hal_mcu_disable_interrupts();
-    uint16_t error = self->last_error;
-    self->last_error = 0;
+    uint16_t errors = self->last_errors;
+    self->last_errors = 0;
     common_hal_mcu_enable_interrupts();
-    return error;
+    return errors;
 }
 
 // Based upon TMK implementation of PS/2 protocol
@@ -339,7 +339,6 @@ uint16_t common_hal_ps2io_ps2_errors(ps2io_ps2_obj_t* self)
 
 int16_t common_hal_ps2io_ps2_sendcmd(ps2io_ps2_obj_t* self, uint8_t b)
 {
-    int16_t ret = 0;
     disable_interrupt(self);
     inhibit(self);
     delay_us(100);
@@ -348,7 +347,7 @@ int16_t common_hal_ps2io_ps2_sendcmd(ps2io_ps2_obj_t* self, uint8_t b)
     data_lo(self);
     clk_hi(self);
     if (!wait_clk_lo(self, 10000)) {
-        ret = ERROR_TX_RTS;
+        self->last_errors |= ERROR_TX_RTS;
         goto ERROR;
     }
 
@@ -362,11 +361,11 @@ int16_t common_hal_ps2io_ps2_sendcmd(ps2io_ps2_obj_t* self, uint8_t b)
             data_lo(self);
         }
         if (!wait_clk_hi(self, 50)) {
-            ret = ERROR_TX_CLKHI;
+            self->last_errors |= ERROR_TX_CLKHI;
             goto ERROR;
         }
         if (!wait_clk_lo(self, 50)) {
-            ret = ERROR_TX_CLKLO;
+            self->last_errors |= ERROR_TX_CLKLO;
             goto ERROR;
         }
     }
@@ -378,11 +377,11 @@ int16_t common_hal_ps2io_ps2_sendcmd(ps2io_ps2_obj_t* self, uint8_t b)
         data_lo(self);
     }
     if (!wait_clk_hi(self, 50)) {
-        ret = ERROR_TX_CLKHI;
+        self->last_errors |= ERROR_TX_CLKHI;
         goto ERROR;
     }
     if (!wait_clk_lo(self, 50)) {
-        ret = ERROR_TX_CLKLO;
+        self->last_errors |= ERROR_TX_CLKLO;
         goto ERROR;
     }
 
@@ -392,21 +391,21 @@ int16_t common_hal_ps2io_ps2_sendcmd(ps2io_ps2_obj_t* self, uint8_t b)
 
     /* Ack */
     if (!wait_data_lo(self, 50)) {
-        ret = ERROR_TX_ACKDATA;
+        self->last_errors |= ERROR_TX_ACKDATA;
         goto ERROR;
     }
     if (!wait_clk_lo(self, 50)) {
-        ret = ERROR_TX_ACKCLK;
+        self->last_errors |= ERROR_TX_ACKCLK;
         goto ERROR;
     }
 
     /* wait for idle state */
     if (!wait_clk_hi(self, 50)) {
-        ret = ERROR_TX_ACKCLK;
+        self->last_errors |= ERROR_TX_ACKCLK;
         goto ERROR;
     }
     if (!wait_data_hi(self, 50)) {
-        ret = ERROR_TX_ACKDATA;
+        self->last_errors |= ERROR_TX_ACKDATA;
         goto ERROR;
     }
 
@@ -430,12 +429,13 @@ int16_t common_hal_ps2io_ps2_sendcmd(ps2io_ps2_obj_t* self, uint8_t b)
     /* No response */
     common_hal_mcu_disable_interrupts();
     self->waiting_cmd_response = false;
+    self->last_errors |= ERROR_TX_NORESP;
     common_hal_mcu_enable_interrupts();
-    return ERROR_TX_NORESP;
+    return -1;
 
+    /* Other errors */
 ERROR:
     idle(self);
     resume_interrupt(self);
-
-    return ret;
+    return -1;
 }
