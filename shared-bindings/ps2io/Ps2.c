@@ -55,6 +55,8 @@
 //|   :param ~microcontroller.Pin clock_pin: Pin tied to clock wire.
 //|     This pin must support interrupts.
 //|
+//|   Read one byte from PS/2 keyboard and turn on Scroll Lock LED:
+//|
 //|     import ps2io
 //|     import board
 //|
@@ -64,7 +66,7 @@
 //|         pass
 //|     print(kbd.popleft())
 //|     print(kbd.sendcmd(0xed))
-//|     print(kbd.sendcmd(0x02))
+//|     print(kbd.sendcmd(0x01))
 //|
 STATIC mp_obj_t ps2io_ps2_make_new(const mp_obj_type_t *type, size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     enum { ARG_datapin, ARG_clkpin };
