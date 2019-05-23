@@ -45,7 +45,7 @@
 //| legacy devices. It is similar to UART but there are only two 
 //| lines (Data and Clock). PS/2 devices are 5V, so bidirectional
 //| level converters must be used to connect the I/O lines to pins
-//| of  3.3V boards.
+//| of 3.3V boards.
 //|
 //| .. class:: Ps2(data_pin, clock_pin)
 //|
@@ -53,7 +53,7 @@
 //|
 //|   :param ~microcontroller.Pin data_pin: Pin tied to data wire.
 //|   :param ~microcontroller.Pin clock_pin: Pin tied to clock wire.
-//|   This pin must spport interrupts.
+//|     This pin must support interrupts.
 //|
 //|     import ps2io
 //|     import board
@@ -135,14 +135,18 @@ STATIC mp_obj_t ps2io_ps2_obj_popleft(mp_obj_t self_in) {
 }
 MP_DEFINE_CONST_FUN_OBJ_1(ps2io_ps2_popleft_obj, ps2io_ps2_obj_popleft);
 
-//|   .. method:: sendcmd()
+//|   .. method:: sendcmd(byte)
 //|
 //|     Sends a command byte to PS/2. Returns the response byte, typically
 //|     an ACK (0xFA). Some commands return additional data that should be
 //|     received via popleft().
+//|
 //|     Raises a RuntimeError in case of failure. The cause can be found via
 //|     clear_errors(). It is advisable to call clear_errors() before sendcmd()
 //|     in order to flush previous errors.
+//|
+//|     :param int byte: byte value of the command
+//|
 STATIC mp_obj_t ps2io_ps2_obj_sendcmd(mp_obj_t self_in, mp_obj_t ob) {
     ps2io_ps2_obj_t *self = MP_OBJ_TO_PTR(self_in);
     raise_error_if_deinited(common_hal_ps2io_ps2_deinited(self));
@@ -157,20 +161,33 @@ MP_DEFINE_CONST_FUN_OBJ_2(ps2io_ps2_sendcmd_obj, ps2io_ps2_obj_sendcmd);
 
 //|   .. method:: clear_errors()
 //|
-//|     Returns and clears a bitmap of the last communication errors.
+//|     Returns and clears bitmap with recorded communication errors.
+//|
 //|     Reception errors (arise asynchronously, as data is received):
-//|        0x01: start bit not 0
-//|        0x02: timeout
-//|        0x04: parity bit error
-//|        0x08: stop bit not 1
-//|        0x10: buffer overflow, newest data discarded
+//|
+//|     0x01: start bit not 0
+//|
+//|     0x02: timeout
+//|
+//|     0x04: parity bit error
+//|
+//|     0x08: stop bit not 1
+//|
+//|     0x10: buffer overflow, newest data discarded
+//|
 //|     Transmission errors (may arise in the course of sendcmd()):
-//|        0x100: clock pin didn't go to LO in time
-//|        0x200: clock pin didn't go to HI in time
-//|        0x400: data pin didn't ack
-//|        0x800: clock pin didn't ack
-//|        0x1000: device didn't respond to Request to Send
-//|        0x2000: device didn't send response byte in time
+//|
+//|     0x100: clock pin didn't go to LO in time
+//|
+//|     0x200: clock pin didn't go to HI in time
+//|
+//|     0x400: data pin didn't ack
+//|
+//|     0x800: clock pin didn't ack
+//|
+//|     0x1000: device didn't respond to Request to Send
+//|
+//|     0x2000: device didn't send response byte in time
 //|
 STATIC mp_obj_t ps2io_ps2_obj_clear_errors(mp_obj_t self_in) {
     ps2io_ps2_obj_t *self = MP_OBJ_TO_PTR(self_in);
