@@ -42,7 +42,7 @@
 //| =========================================================
 //|
 //| Ps2 implements the PS/2 keyboard/mouse serial protocol, used in
-//| legacy devices. It is similar to UART but there are only two 
+//| legacy devices. It is similar to UART but there are only two
 //| lines (Data and Clock). PS/2 devices are 5V, so bidirectional
 //| level converters must be used to connect the I/O lines to pins
 //| of 3.3V boards.
@@ -55,7 +55,7 @@
 //|   :param ~microcontroller.Pin clock_pin: Pin tied to clock wire.
 //|     This pin must support interrupts.
 //|
-//|   Read one byte from PS/2 keyboard and turn on Scroll Lock LED:
+//|   Read one byte from PS/2 keyboard and turn on Scroll Lock LED::
 //|
 //|     import ps2io
 //|     import board
@@ -64,6 +64,7 @@
 //|
 //|     while len(kbd) == 0:
 //|         pass
+//|
 //|     print(kbd.popleft())
 //|     print(kbd.sendcmd(0xed))
 //|     print(kbd.sendcmd(0x01))
@@ -140,12 +141,13 @@ MP_DEFINE_CONST_FUN_OBJ_1(ps2io_ps2_popleft_obj, ps2io_ps2_obj_popleft);
 //|   .. method:: sendcmd(byte)
 //|
 //|     Sends a command byte to PS/2. Returns the response byte, typically
-//|     an ACK (0xFA). Some commands return additional data that should be
-//|     received via popleft().
+//|     the general ack value (0xFA). Some commands return additional data
+//|     which is available through :py:func:`popleft()`.
 //|
-//|     Raises a RuntimeError in case of failure. The cause can be found via
-//|     clear_errors(). It is advisable to call clear_errors() before sendcmd()
-//|     in order to flush previous errors.
+//|     Raises a RuntimeError in case of failure. The root cause can be found
+//|     by calling :py:func:`clear_errors()`. It is advisable to call
+//|     :py:func:`clear_errors()` before :py:func:`sendcmd()` to flush any
+//|     previous errors.
 //|
 //|     :param int byte: byte value of the command
 //|
@@ -163,7 +165,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(ps2io_ps2_sendcmd_obj, ps2io_ps2_obj_sendcmd);
 
 //|   .. method:: clear_errors()
 //|
-//|     Returns and clears bitmap with recorded communication errors.
+//|     Returns and clears a bitmap with latest recorded communication errors.
 //|
 //|     Reception errors (arise asynchronously, as data is received):
 //|
@@ -177,19 +179,19 @@ MP_DEFINE_CONST_FUN_OBJ_2(ps2io_ps2_sendcmd_obj, ps2io_ps2_obj_sendcmd);
 //|
 //|     0x10: buffer overflow, newest data discarded
 //|
-//|     Transmission errors (may arise in the course of sendcmd()):
+//|     Transmission errors (can only arise in the course of sendcmd()):
 //|
 //|     0x100: clock pin didn't go to LO in time
 //|
 //|     0x200: clock pin didn't go to HI in time
 //|
-//|     0x400: data pin didn't ack
+//|     0x400: data pin didn't ACK
 //|
-//|     0x800: clock pin didn't ack
+//|     0x800: clock pin didn't ACK
 //|
-//|     0x1000: device didn't respond to Request to Send
+//|     0x1000: device didn't respond to RTS
 //|
-//|     0x2000: device didn't send response byte in time
+//|     0x2000: device didn't send a response byte in time
 //|
 STATIC mp_obj_t ps2io_ps2_obj_clear_errors(mp_obj_t self_in) {
     ps2io_ps2_obj_t *self = MP_OBJ_TO_PTR(self_in);
@@ -201,8 +203,8 @@ MP_DEFINE_CONST_FUN_OBJ_1(ps2io_ps2_clear_errors_obj, ps2io_ps2_obj_clear_errors
 
 //|   .. method:: __len__()
 //|
-//|     Returns the number of received bytes in buffer, obtainable
-//|     via popleft()
+//|     Returns the number of received bytes in buffer, available
+//|     to :py:func:`popleft()`.
 //|
 STATIC mp_obj_t ps2_unary_op(mp_unary_op_t op, mp_obj_t self_in) {
     ps2io_ps2_obj_t *self = MP_OBJ_TO_PTR(self_in);
