@@ -138,6 +138,44 @@ STATIC mp_obj_t ps2io_ps2_obj_popleft(mp_obj_t self_in) {
 }
 MP_DEFINE_CONST_FUN_OBJ_1(ps2io_ps2_popleft_obj, ps2io_ps2_obj_popleft);
 
+//|   .. method:: inhibit()
+//|
+//|     Pulls clock line low, preventing the device from sending data.
+//|     Any in-progress transmission is halted. Data flow is restored by
+//|     calling :py:func:`sendcmd()`.
+//|
+//|     This is mainly useful for host-to-device commands returning
+//|     additional data after the response byte::
+//|
+//|       # Clear the buffer and make sure no more keystrokes are received
+//|       kbd.inhibit()
+//|       while len(kbd) > 0:
+//|           kbd.popleft()
+//|
+//|       # Without inhibit(), some keystroke could be received at this point,
+//|       # and keystroke data may be indistinguishable from command response
+//|
+//|       # Send command 'Read Keyboard ID'
+//|       kbd.sendcmd(0xf2)
+//|
+//|       while len(keyboard) < 2:
+//|           pass
+//|
+//|       # Print keyboard ID
+//|       print(kbd.popleft())
+//|       print(kbd.popleft())
+//|
+//|       # Keystrokes are normally received from this point on
+//|
+
+STATIC mp_obj_t ps2io_ps2_obj_inhibit(mp_obj_t self_in) {
+    ps2io_ps2_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    raise_error_if_deinited(common_hal_ps2io_ps2_deinited(self));
+    common_hal_ps2io_ps2_inhibit(self);
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_1(ps2io_ps2_inhibit_obj, ps2io_ps2_obj_inhibit);
+
 //|   .. method:: sendcmd(byte)
 //|
 //|     Sends a command byte to PS/2. Returns the response byte, typically
@@ -223,6 +261,7 @@ STATIC const mp_rom_map_elem_t ps2io_ps2_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR___enter__), MP_ROM_PTR(&default___enter___obj) },
     { MP_ROM_QSTR(MP_QSTR___exit__), MP_ROM_PTR(&ps2io_ps2___exit___obj) },
     { MP_ROM_QSTR(MP_QSTR_popleft), MP_ROM_PTR(&ps2io_ps2_popleft_obj) },
+    { MP_ROM_QSTR(MP_QSTR_inhibit), MP_ROM_PTR(&ps2io_ps2_inhibit_obj) },
     { MP_ROM_QSTR(MP_QSTR_sendcmd), MP_ROM_PTR(&ps2io_ps2_sendcmd_obj) },
     { MP_ROM_QSTR(MP_QSTR_clear_errors), MP_ROM_PTR(&ps2io_ps2_clear_errors_obj) },
 };

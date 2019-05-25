@@ -334,6 +334,11 @@ uint16_t common_hal_ps2io_ps2_clear_errors(ps2io_ps2_obj_t* self)
     return errors;
 }
 
+void common_hal_ps2io_ps2_inhibit(ps2io_ps2_obj_t* self)
+{
+    inhibit(self);
+}
+
 // Based upon TMK implementation of PS/2 protocol
 // https://github.com/tmk/tmk_keyboard/blob/master/tmk_core/protocol/ps2_interrupt.c
 
